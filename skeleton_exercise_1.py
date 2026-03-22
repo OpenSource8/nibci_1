@@ -2,9 +2,9 @@
 # Non-invasive Brain-Computer Interfaces, KU [709.028]
 #             Assignment 1, Exercise 1
 #----------------------------------------------------
-#           Group: XY
-#               Member 1:
-#               Member 2:
+#           Group: 14
+#               Member 1: Niklas Peterek
+#               Member 2: Lukas Springer
 ######################################################
 
 # -- Python imports --
