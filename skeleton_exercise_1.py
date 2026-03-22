@@ -106,12 +106,20 @@ def apply_laplacian(data, neighbors= neighbors, ch_names = ch_names, g_j = 0.5):
 
         data_lap[idx] = channel_laplace_data # insert the data into the preallocated matrix
 
-
     return data_lap
 
 # Function to apply CAR
 
-def apply_car(data, ch_names):
+def apply_car(data, ch_names = ch_names):
+    """applies car re-referencing to the given data
+
+    Args:
+        data : EEG data, separated into channels
+        ch_names (list, optional): list of recorded channels. Defaults to ch_names.
+
+    Returns:
+        EEG data that is car re-referenced
+    """
 
     n_channels, n_samples = data.shape # get number of channels and samples from the data
     data_car = np.empty((n_channels, n_samples)) # generate an empty matrix for the rereferenced values to go into
@@ -129,6 +137,23 @@ def apply_car(data, ch_names):
         data_car[idx] = channel_car_data # insert the data into the preallocated matrix
 
     return data_car
+
+
+def compute_mse(data1, data2):
+    """Computes the mean squared error of two EEG recordings
+
+    Args:
+        data1 : EEG data 1
+        data2 : EEG data 1
+
+    Returns:
+        float : mean squared error of the two recordings
+    """
+    difference = data1 - data2
+    difference_2 = difference**2
+    n_channels, _ = difference.shape
+    mse = np.sum(difference_2)/n_channels
+    return mse
 
 
 def main():
@@ -155,14 +180,37 @@ def main():
     data2_lap = apply_laplacian(data2_noisy, neighbors, ch_names, 0.5)
     data2_car = apply_car(data2_noisy, ch_names)
 
-    # eeg_plot(data1_lap, ch_names=ch_names, sfreq=sfreq, title="EEG 1 noisy - Laplacian re-referencing applied")
-    # eeg_plot(data1_car, ch_names=ch_names, sfreq=sfreq, title="EEG 1 noisy - Car re-referencing applied")
-    # eeg_plot(data1_clean, ch_names=ch_names, sfreq=sfreq, title="EEG 1 Clean")
+    eeg_plot(data1_lap, ch_names=ch_names, sfreq=sfreq, title="EEG 1 noisy - Laplacian re-referencing applied")
+    eeg_plot(data1_car, ch_names=ch_names, sfreq=sfreq, title="EEG 1 noisy - Car re-referencing applied")
+    eeg_plot(data1_clean, ch_names=ch_names, sfreq=sfreq, title="EEG 1 Clean")
 
     eeg_plot(data2_lap, ch_names=ch_names, sfreq=sfreq, title="EEG 2 noisy - Laplacian re-referencing applied")
     eeg_plot(data2_car, ch_names=ch_names, sfreq=sfreq, title="EEG 2 noisy - Car re-referencing applied")
     eeg_plot(data2_clean, ch_names=ch_names, sfreq=sfreq, title="EEG 2 Clean")
 
+    mse1 = compute_mse(data1_noisy, data1_clean)
+    mse1_lap_clean = compute_mse(data1_lap, data1_clean)
+    mse1_car_clean = compute_mse(data1_car, data1_clean)
+
+    mse2 = compute_mse(data2_noisy, data2_clean)
+    mse2_lap_clean = compute_mse(data2_lap, data2_clean)
+    mse2_car_clean = compute_mse(data2_car, data2_clean)
+
+    print(f"_______________________________")
+
+    print(f"Dataset 1: ")
+    print(f"No Filter: {mse1}")
+    print(f"Laplacian: {mse1_lap_clean}")
+    print(f"Car: {mse1_car_clean}")
+
+    print(f"_______________________________")
+
+    print(f"Dataset 2: ")
+    print(f"No Filter: {mse2}")
+    print(f"Laplacian: {mse2_lap_clean}")
+    print(f"Car: {mse2_car_clean}")
+
+    print(f"_______________________________")
 
 
 
