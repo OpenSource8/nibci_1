@@ -25,13 +25,67 @@ ch_names = [
 # -- Functions --
 def pipeline_1(raw, bad_channels):
     # TODO
-    raw_1 = ...
+    raw_1 = raw.copy()
+
+
+    raw_1.info["bads"] = bad_channels
+    print(raw_1.info["bads"])
+
+
+    n_used_channels = len(ch_names) - len(bad_channels)
+
+    raw_1.drop_channels(bad_channels)
+
+    raw_1.set_eeg_reference(ref_channels = "average", projection = False)
+
+
+    # as documentation gives a warning:
+    # ICA is sensitive to low-frequency drifts and therefore 
+    # requires the data to be high-pass filtered prior to fitting. 
+    # Typically, a cutoff frequency of 1 Hz is recommended.
+    raw_1.filter(1, None)
+
+    ica = ICA(n_used_channels, random_state=7, method="fastica")
+
+    ica.fit(raw_1)
+
+    ica.plot_components(title = "ica components")
+
+    # ica.plot_sources(raw_1,title ="ica sources")
+
+    ic_labels = label_components(raw_1, ica, method="iclabel")
+
+    y_pred_proba = ic_labels["y_pred_proba"]
+
+    labels = ic_labels["labels"]
+
+    confidence_threshold = 0.8
+
+    ica_included = { }
+    ica_excluded = {}
+
+
+    pred_idx_include = np.where(y_pred_proba>= confidence_threshold)
+    labels_include = labels(pred_idx_include)
+
+    pred_idx_exclude = np.where(y_pred_proba < confidence_threshold)
+    labels_exclude = labels(pred_idx_exclude)
+
+
+
+    print("stop")
+
+
+
+
     return raw_1
 
 def pipeline_2(raw):
     # TODO
     raw_2 = ...
     return raw_2
+
+
 
 def main():
     # -- 1. Data Import and Channel Localization --
@@ -50,11 +104,25 @@ def main():
     raw.set_montage(montage)
 
     # TODO: -- 2. Data Visualization and Identification of Noisy Channels --
-    ...
-    bad_channels = [] # After the visualization you should have a list with the bad channels
+
+    # raw.plot(duration=24,       # show full signal
+    #     n_channels=len(ch_names),
+    #     scalings=dict(eeg=50e-6),
+    #     title="Raw EEG data",
+    #     show=True)
     
+    # raw.plot_sensors(show_names = True)
+    # raw.plot_psd_topomap()
+    # raw.compute_psd().plot() # as .plot_psd is a legacy function
+
+    bad_channels = ["F4", "T8"] # After the visualization you should have a list with the bad channels
+
+    # T8 porbably electrode artifact -> electrode popping maybe?
+    # F4 probably bad contact of electrode?
+
     # TODO: -- 3. Preprocessing Pipeline 1 (Removing Noisy Channels) --
     raw_1 = pipeline_1(raw=raw, bad_channels=bad_channels)
+
 
     # TODO: -- 4. Preprocessing Pipeline 2 (Without Removing Noisy Channels) --
     raw_2 = pipeline_2(raw=raw)
