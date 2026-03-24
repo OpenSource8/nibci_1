@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import mne
 from mne.preprocessing import ICA
 from mne_icalabel import label_components
+import numpy as np
 
 # -- Parameter Definitions --
 sfreq = 200 # Hz
@@ -49,36 +50,70 @@ def pipeline_1(raw, bad_channels):
 
     ica.fit(raw_1)
 
-    ica.plot_components(title = "ica components")
 
-    # ica.plot_sources(raw_1,title ="ica sources")
+
+    ica.plot_components(title = "ica components")
+    ica.plot_sources(raw_1,title ="ica sources")
 
     ic_labels = label_components(raw_1, ica, method="iclabel")
-
     y_pred_proba = ic_labels["y_pred_proba"]
-
     labels = ic_labels["labels"]
 
     confidence_threshold = 0.8
 
-    ica_included = { }
-    ica_excluded = {}
+    ica_high = {}
+    ica_low = {}
+
+    for idx, pred in enumerate(y_pred_proba):
+        if pred >= confidence_threshold:
+             ica_high[idx] = [labels[idx], pred]
+
+    for idx, pred in enumerate(y_pred_proba):
+        if pred < confidence_threshold:
+             ica_low[idx] = [labels[idx], pred]
 
 
-    pred_idx_include = np.where(y_pred_proba>= confidence_threshold)
-    labels_include = labels(pred_idx_include)
+    
+    high_c_brain = {}
+    high_c_artifacts = {}
+    for entry in ica_high:
+        print(entry)
+        if ica_high[entry][0] == "brain":
+            high_c_brain[entry] = ica_high[entry]
+        else:
+            high_c_artifacts[entry] = ica_high[entry]
 
-    pred_idx_exclude = np.where(y_pred_proba < confidence_threshold)
-    labels_exclude = labels(pred_idx_exclude)
+    low_c_brain = {}
+    low_c_artifacts = {}
+    for entry in ica_low:
+        print(entry)
+        if ica_low[entry][0] == "brain":
+            low_c_brain[entry] = ica_low[entry]
+        else:
+            low_c_artifacts[entry] = ica_low[entry]
+
+    print("__________________________________________\n")
+    print("high cnfidence")
+    print("Brain\n")
+    print(high_c_brain)
+
+    print("Artifacts\n")
+    print(high_c_artifacts)
+
+    print("__________________________________________\n")
+    print("low confidence")
+    print("Brain\n")
+    print(low_c_brain)
+
+    print("Artifacts\n")
+    print(low_c_artifacts)
 
 
-
-    print("stop")
-
-
+    keep = {**high_c_brain, **low_c_brain, **low_c_artifacts}.keys()
+    exclude = high_c_artifacts.keys()
 
 
-    return raw_1
+    return raw_1, keep, exclude
 
 def pipeline_2(raw):
     # TODO
