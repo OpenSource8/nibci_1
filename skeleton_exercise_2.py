@@ -71,8 +71,6 @@ def pipeline_1(raw, bad_channels):
     for idx, pred in enumerate(y_pred_proba):
         if pred < confidence_threshold:
              ica_low[idx] = [labels[idx], pred]
-
-
     
     high_c_brain = {}
     high_c_artifacts = {}
@@ -109,11 +107,14 @@ def pipeline_1(raw, bad_channels):
     print(low_c_artifacts)
 
 
-    keep = {**high_c_brain, **low_c_brain, **low_c_artifacts}.keys()
-    exclude = high_c_artifacts.keys()
+    kept_components = {**high_c_brain, **low_c_brain, **low_c_artifacts}.keys()
+    excluded_components = high_c_artifacts.keys()
 
+    ica.exclude = excluded_components
 
-    return raw_1, keep, exclude
+    #TODO: finish the task and interpolate removed noisy channels
+
+    return raw_1
 
 def pipeline_2(raw):
     # TODO
